@@ -12,6 +12,13 @@ useHead({
   link: [
     { rel: 'icon', href: '/favicon.ico' }
   ],
+  script: [
+    {
+      src: "https://accounts.google.com/gsi/client",
+      async: true,
+      defer: true,
+    },
+  ],
   htmlAttrs: {
     lang: 'en'
   }

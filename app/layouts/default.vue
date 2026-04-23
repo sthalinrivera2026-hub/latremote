@@ -1,162 +1,134 @@
-<script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
-
-const route = useRoute()
-const toast = useToast()
-
-const open = ref(false)
-
-const links = [[{
-  label: 'Home',
-  icon: 'i-lucide-house',
-  to: '/',
-  onSelect: () => {
-    open.value = false
-  }
-}, {
-  label: 'Inbox',
-  icon: 'i-lucide-inbox',
-  to: '/inbox',
-  badge: '4',
-  onSelect: () => {
-    open.value = false
-  }
-}, {
-  label: 'Customers',
-  icon: 'i-lucide-users',
-  to: '/customers',
-  onSelect: () => {
-    open.value = false
-  }
-}, {
-  label: 'Settings',
-  to: '/settings',
-  icon: 'i-lucide-settings',
-  defaultOpen: true,
-  type: 'trigger',
-  children: [{
-    label: 'General',
-    to: '/settings',
-    exact: true,
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Members',
-    to: '/settings/members',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Notifications',
-    to: '/settings/notifications',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Security',
-    to: '/settings/security',
-    onSelect: () => {
-      open.value = false
-    }
-  }]
-}], [{
-  label: 'Feedback',
-  icon: 'i-lucide-message-circle',
-  to: 'https://github.com/nuxt-ui-templates/dashboard',
-  target: '_blank'
-}, {
-  label: 'Help & Support',
-  icon: 'i-lucide-info',
-  to: 'https://github.com/nuxt-ui-templates/dashboard',
-  target: '_blank'
-}]] satisfies NavigationMenuItem[][]
-
-const groups = computed(() => [{
-  id: 'links',
-  label: 'Go to',
-  items: links.flat()
-}, {
-  id: 'code',
-  label: 'Code',
-  items: [{
-    id: 'source',
-    label: 'View page source',
-    icon: 'i-simple-icons-github',
-    to: `https://github.com/nuxt-ui-templates/dashboard/blob/main/app/pages${route.path === '/' ? '/index' : route.path}.vue`,
-    target: '_blank'
-  }]
-}])
-
-onMounted(async () => {
-  const cookie = useCookie('cookie-consent')
-  if (cookie.value === 'accepted') {
-    return
-  }
-
-  toast.add({
-    title: 'We use first-party cookies to enhance your experience on our website.',
-    duration: 0,
-    close: false,
-    actions: [{
-      label: 'Accept',
-      color: 'neutral',
-      variant: 'outline',
-      onClick: () => {
-        cookie.value = 'accepted'
-      }
-    }, {
-      label: 'Opt out',
-      color: 'neutral',
-      variant: 'ghost'
-    }]
-  })
-})
-</script>
-
 <template>
-  <UDashboardGroup unit="rem">
-    <UDashboardSidebar
-      id="default"
-      v-model:open="open"
-      collapsible
-      resizable
-      class="bg-elevated/25"
-      :ui="{ footer: 'lg:border-t lg:border-default' }"
-    >
-      <template #header="{ collapsed }">
-        <TeamsMenu :collapsed="collapsed" />
+  <div class="min-h-screen flex flex-col bg-white dark:bg-gray-900">
+    <UHeader>
+      <!-- Izquierda -->
+      <template #left>
+        <NuxtLink to="/">
+          LABREMOTE
+          <!-- Logo modo claro -->
+          <!-- <img src="/logo-light.png" alt="Logo Tienda" class="w-28 h-auto block dark:hidden" />
+          <img src="/logo-dark.png" alt="Logo Tienda" class="w-28 h-auto hidden dark:block" /> -->
+        </NuxtLink>
       </template>
 
-      <template #default="{ collapsed }">
-        <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default" />
+      <!-- Menú central -->
+      <UNavigationMenu :items="items" variant="link" />
 
-        <UNavigationMenu
-          :collapsed="collapsed"
-          :items="links[0]"
-          orientation="vertical"
-          tooltip
-          popover
-        />
+      <!-- Derecha -->
+      <template #right>
+        <UColorModeButton />
 
-        <UNavigationMenu
-          :collapsed="collapsed"
-          :items="links[1]"
-          orientation="vertical"
-          tooltip
-          class="mt-auto"
-        />
+        <!-- 🔴 NO LOGUEADO -->
+        <NuxtLink v-if="!isLogged" to="/login" class="px-4 py-2 bg-blue-600 text-white rounded-xl">
+          Login
+        </NuxtLink>
+
+        <!-- 🟢 LOGUEADO -->
+        <div v-else class="relative">
+
+          <!-- AVATAR -->
+          <button @click="toggleProfile">
+            <img :src="user?.avatar_url || 'https://i.pravatar.cc/40'" class="w-10 h-10 rounded-full border" />
+          </button>
+
+          <!-- DROPDOWN -->
+          <div v-if="profileOpen"
+            class="absolute right-0 mt-3 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg  z-50">
+            <!-- USER INFO -->
+            <div class="px-4 py-3 border-b">
+              <p class="text-sm font-semibold">{{ user?.name }}</p>
+              <p class="text-xs text-gray-400">{{ user?.email }}</p>
+            </div>
+
+            <!-- LINKS -->
+            <NuxtLink to="/dashboard" class="block px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
+              Dashboard
+            </NuxtLink>
+
+            <NuxtLink to="/profile" class="block px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
+              Perfil
+            </NuxtLink>
+
+            <div class="border-t"></div>
+
+            <!-- LOGOUT -->
+            <button @click="logout"
+              class="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
       </template>
 
-      <template #footer="{ collapsed }">
-        <UserMenu :collapsed="collapsed" />
+      <!-- Menú móvil -->
+      <template #body>
+        <UNavigationMenu :items="mobileMenuItems" orientation="vertical" class="-mx-2.5" />
+
+        <USeparator class="my-6" />
+
+        <UButton label="Sign in" color="neutral" variant="subtle" to="/login" leading-icon="i-lucide-log-in" block
+          class="mb-3" />
+
+
       </template>
-    </UDashboardSidebar>
+    </UHeader>
 
-    <UDashboardSearch :groups="groups" />
+    <main class="items-center justify-center py-4">
+      <slot />
+    </main>
 
-    <slot />
+    <!-- Componente del carrito -->
+    <CartDrawer />
 
-    <NotificationsSlideover />
-  </UDashboardGroup>
+    <footer class="bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 text-center py-6">
+      © 2025 Ricen Store. Todos los derechos reservados.
+    </footer>
+  </div>
 </template>
+
+<script setup>
+
+const { user, isLogged, initAuth, logout } = useAuth()
+
+const profileOpen = ref(false)
+
+onMounted(() => {
+  initAuth()
+})
+
+const toggleProfile = () => {
+  profileOpen.value = !profileOpen.value
+}
+// Menú de navegación
+const items = [
+  {
+    label: 'Nosotros',
+    to: '/about',
+    icon: 'i-lucide-users'
+  },
+  {
+    label: 'Documentación',
+    to: '/documentation',
+    icon: 'i-lucide-book-open'
+  },
+
+  {
+    label: 'Blog',
+    to: '/blog',
+    icon: 'i-lucide-book'
+  },
+
+]
+
+// Menú móvil (incluye el badge de favoritos)
+const mobileMenuItems = computed(() => {
+  return items.map(item => ({
+    ...item,
+    label: item.badge
+      ? `${item.label} (${item.badge})`
+      : item.label
+  }))
+})
+
+
+</script>
