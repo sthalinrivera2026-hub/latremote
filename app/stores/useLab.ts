@@ -137,6 +137,7 @@ export const useLabStore = defineStore('lab', () => {
         init,
         stop,
         join,
+        load,
         end
     }
 })

@@ -5,19 +5,25 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@vueuse/nuxt',
     '@pinia/nuxt',
-    '@pinia/nuxt'
-
+    '@nuxt/content'
   ],
   devtools: {
     enabled: true
   },
 
   css: ['~/assets/css/main.css'],
-
-  routeRules: {
-    '/api/**': {
-      cors: true
+  content: {
+    build: {
+      markdown: {
+        toc: {
+          depth: 3, // include h3 headings
+        }
+      }
     }
+  },
+  routeRules: {
+    '/api/**': { cors: true, },
+    '/docs': { redirect: '/docs/getting-started', prerender: false }
   },
   runtimeConfig: {
     public: {

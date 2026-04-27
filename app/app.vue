@@ -35,6 +35,14 @@ useSeoMeta({
   ogImage: 'https://ui.nuxt.com/assets/templates/nuxt/dashboard-light.png',
   twitterCard: 'summary_large_image'
 })
+const { data: navigation } = await useAsyncData('navigation', () => queryCollectionNavigation('docs'), {
+  transform: data => data.find(item => item.path === '/docs')?.children || []
+})
+const { data: files } = useLazyAsyncData('search', () => queryCollectionSearchSections('docs'), {
+  server: false
+})
+
+provide('navigation', navigation)
 </script>
 
 <template>
@@ -44,5 +52,8 @@ useSeoMeta({
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
+    <ClientOnly>
+      <LazyUContentSearch :files="files" shortcut="meta_k" :navigation="navigation" :fuse="{ resultLimit: 42 }" />
+    </ClientOnly>
   </UApp>
 </template>

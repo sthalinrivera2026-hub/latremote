@@ -28,6 +28,14 @@ const links = [[{
   onSelect: () => {
     open.value = false
   }
+},
+{
+  label: 'Usuarios',
+  icon: 'i-lucide-users',
+  to: '/dashboard/users',
+  onSelect: () => {
+    open.value = false
+  }
 }, {
   label: 'Settings',
   to: '/dashboard/settings',
